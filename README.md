@@ -59,15 +59,30 @@
   любой каталог, который поддерживает OPDS.
 - Скачивание сразу кладёт книгу в библиотеку вместе с обложкой.
 
+**Телефон и синхронизация**
+- Android-приложение (Capacitor) собирается на GitHub Actions и лежит в релизах — APK ставится прямо с телефона.
+- Общая библиотека, записи, цитаты и позиция чтения живут в приватном GitHub-репозитории: сервера нет,
+  платить не за что, данные видишь только ты.
+- Слияние умное: позиция чтения берётся с того устройства, где читали позже, цитаты и теги объединяются,
+  удаления разъезжаются через список `removed`.
+- Книгу можно отправить на телефон кнопкой в карточке — файл уедет в тот же репозиторий.
+- Уведомления на телефоне: о новых книгах и записях после синхронизации и напоминание читать в заданное время.
+
 **Ресурсы**
 - Куча памяти под большие книги: `--max-old-space-size=8192`, дисковый кэш 512 МБ, фон не тормозится.
 - Разобранная книга кэшируется на диск, так что повторное открытие мгновенное.
 
 ## Установка
 
+**Телефон:** последний APK — https://github.com/goblin507532-del/lumen-reader/releases/latest
+Скачай на телефоне, разреши установку из этого источника, затем «Ещё → Синхронизация»: вставь GitHub-токен
+и свой логин, нажми «Синхронизировать сейчас».
+
+**Компьютер:**
+
 В папке `dist`:
-- `LumenReader-portable-1.2.0.exe` — запускается без установки.
-- `LumenReader-setup-1.2.0.exe` — установщик с выбором папки и ярлыком на рабочем столе.
+- `LumenReader-portable-1.3.0.exe` — запускается без установки.
+- `LumenReader-setup-1.3.0.exe` — установщик с выбором папки и ярлыком на рабочем столе.
 
 Данные (книги, обложки, заметки, выделения) лежат в `%APPDATA%\Lumen Reader\data`.
 Кнопка «Резервная копия» в настройках выгружает всю базу одним JSON-файлом.
@@ -100,7 +115,7 @@ node tools\make-icon.js       # перегенерировать build\icon.ico
 npx electron-builder --win portable nsis --config.win.signAndEditExecutable=false
 & "$env:LOCALAPPDATA\electron-builder\Cache\winCodeSign\<id>\rcedit-x64.exe" `
     "dist\win-unpacked\Lumen Reader.exe" --set-icon build\icon.ico `
-    --set-version-string FileDescription "Lumen Reader" --set-file-version 1.2.0
+    --set-version-string FileDescription "Lumen Reader" --set-file-version 1.3.0
 npx electron-builder --win portable nsis --prepackaged dist\win-unpacked --config.win.signAndEditExecutable=false
 ```
 
@@ -124,6 +139,9 @@ src/lib/opds.js      Gutendex и OPDS-каталоги, скачивание
 src/lib/translate.js движки перевода: машинные и литературный через LLM
 src/lib/recipe.js    страница -> структурированный рецепт в Markdown
 src/lib/store.js     библиотека на диске, кэш разбора, обложки
-src/ipc-extra.js     IPC перевода и захвата рецептов
+src/lib/sync.js      двусторонняя синхронизация через приватный репозиторий
+src/ipc-extra.js     IPC перевода, рецептов и синхронизации
+mobile/www/          приложение для Android (тот же парсер книг и Markdown)
+.github/workflows/   сборка APK на GitHub Actions
 src/renderer/        интерфейс: library / reader / brain / catalog / перевод
 ```
