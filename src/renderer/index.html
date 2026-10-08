@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="night" data-accent="amber">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src lumen: data: blob: https: http:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'none'">
+<title>Lumen Reader</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="titlebar">
+  <div class="tb-left">
+    <div class="avatar" id="avatar" title="Профиль — нажми, чтобы сменить аватар">
+      <img id="avatar-img" alt="" hidden>
+      <span id="avatar-letter">L</span>
+    </div>
+    <div class="tb-brand">
+      <strong id="profile-name">Lumen</strong>
+      <span id="tb-sub">библиотека и второй мозг</span>
+    </div>
+  </div>
+  <div class="tb-search">
+    <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg>
+    <input id="global-search" type="text" placeholder="Поиск по книгам, рецептам, гайдам, выделениям…   (Ctrl+K)" spellcheck="false">
+    <kbd id="search-hint">Ctrl K</kbd>
+  </div>
+  <div class="tb-right">
+    <button class="win-btn" data-win="min" title="Свернуть"><svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg></button>
+    <button class="win-btn" data-win="max" title="Развернуть"><svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7"/></svg></button>
+    <button class="win-btn danger" data-win="close" title="Закрыть"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar">
+    <button class="nav-item active" data-view="library">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M4 5h6v14H4zM14 5h6v14h-6z"/><path d="M4 9h6M14 9h6"/></svg>
+      <span>Библиотека</span><em id="count-books">0</em>
+    </button>
+    <button class="nav-item" data-view="brain">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M12 4a4 4 0 0 0-4 4 3 3 0 0 0-1 5.8V17a3 3 0 0 0 5 2.2 3 3 0 0 0 5-2.2v-3.2A3 3 0 0 0 16 8a4 4 0 0 0-4-4z"/><path d="M12 8v11"/></svg>
+      <span>Второй мозг</span><em id="count-notes">0</em>
+    </button>
+    <button class="nav-item" data-view="highlights">
+      <svg viewBox="0 0 24 24" class="ico"><path d="M4 19h16"/><path d="M7 15l9-9 3 3-9 9H7z"/></svg>
+      <span>Выделения</span><em id="count-hl">0</em>
+    </button>
+    <button class="nav-item" data-view="catalog">
+      <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"/></svg>
+      <span>Каталоги</span>
+    </button>
+    <button class="nav-item" data-view="settings">
+      <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+      <span>Настройки</span>
+    </button>
+
+    <div class="nav-sep"></div>
+    <div class="nav-label">Коллекции</div>
+    <div id="collection-list" class="collection-list"></div>
+    <button class="nav-mini" id="add-collection">+ новая коллекция</button>
+
+    <div class="nav-foot">
+      <button class="btn primary block" id="btn-add"><svg viewBox="0 0 24 24" class="ico"><path d="M12 5v14M5 12h14"/></svg>Добавить файл</button>
+      <button class="btn ghost block" id="btn-new-note">Новая запись</button>
+    </div>
+  </nav>
+
+  <main class="content" id="content">
+
+    <!-- LIBRARY -->
+    <section class="view active" id="view-library">
+      <div class="view-head">
+        <div>
+          <h1>Библиотека</h1>
+          <p class="muted" id="library-sub">Книги, которые ты добавил</p>
+        </div>
+        <div class="head-tools">
+          <div class="seg" id="lib-kind">
+            <button class="active" data-kind="all">Все</button>
+            <button data-kind="reading">Читаю</button>
+            <button data-kind="fav">Избранное</button>
+            <button data-kind="new">Новые</button>
+            <button data-kind="done">Прочитано</button>
+          </div>
+          <select id="lib-sort" class="select">
+            <option value="added">Сначала новые</option>
+            <option value="opened">Недавно открытые</option>
+            <option value="title">По названию</option>
+            <option value="author">По автору</option>
+            <option value="progress">По прогрессу</option>
+          </select>
+          <div class="seg" id="lib-layout">
+            <button class="active" data-layout="grid" title="Сетка"><svg viewBox="0 0 24 24" class="ico"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></button>
+            <button data-layout="list" title="Список"><svg viewBox="0 0 24 24" class="ico"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div id="shelf-continue" class="continue-row"></div>
+      <div id="tag-filter" class="tag-row"></div>
+      <div id="book-grid" class="book-grid"></div>
+      <div id="library-empty" class="empty" hidden>
+        <div class="empty-art">📚</div>
+        <h2>Пока пусто</h2>
+        <p>Перетащи сюда FB2, EPUB, TXT, PDF, DOCX — или скачай из бесплатного каталога.</p>
+        <div class="row center">
+          <button class="btn primary" id="empty-add">Добавить файлы</button>
+          <button class="btn ghost" data-goto="catalog">Открыть каталоги</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- READER -->
+    <section class="view reader-view" id="view-reader">
+      <div class="reader-bar">
+        <button class="icon-btn" id="rd-back" title="В библиотеку"><svg viewBox="0 0 24 24" class="ico"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button class="icon-btn" id="rd-toc" title="Содержание"><svg viewBox="0 0 24 24" class="ico"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+        <div class="rd-title">
+          <strong id="rd-book-title">—</strong>
+          <span id="rd-chapter-title"></span>
+        </div>
+        <div class="rd-tools">
+          <button class="icon-btn" id="rd-find" title="Поиск в книге"><svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg></button>
+          <button class="icon-btn" id="rd-bookmark" title="Закладка"><svg viewBox="0 0 24 24" class="ico"><path d="M7 4h10v16l-5-4-5 4z"/></svg></button>
+          <button class="icon-btn" id="rd-type" title="Шрифт и вид"><svg viewBox="0 0 24 24" class="ico"><path d="M5 18L10 6l5 12M7 14h6"/><path d="M17 18h2"/></svg></button>
+          <button class="icon-btn" id="rd-translate" title="Перевод книги"><svg viewBox="0 0 24 24" class="ico"><path d="M4 6h10M9 4v2c0 4-2.5 7-5 8"/><path d="M7 11c1.5 2.5 3.5 4 6 5"/><path d="M12 20l4-10 4 10M13.5 17h5"/></svg></button>
+          <button class="icon-btn" id="rd-notes" title="Выделения и заметки книги"><svg viewBox="0 0 24 24" class="ico"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h6"/></svg></button>
+        </div>
+      </div>
+
+      <aside class="rd-panel" id="rd-panel-toc">
+        <div class="panel-head"><h3>Содержание</h3><button class="icon-btn" data-close-panel><svg viewBox="0 0 24 24" class="ico"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="panel-body" id="toc-list"></div>
+      </aside>
+
+      <aside class="rd-panel right" id="rd-panel-notes">
+        <div class="panel-head"><h3>Выделения книги</h3><button class="icon-btn" data-close-panel><svg viewBox="0 0 24 24" class="ico"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="panel-body" id="book-hl-list"></div>
+      </aside>
+
+      <aside class="rd-panel right" id="rd-panel-tr">
+        <div class="panel-head"><h3>Перевод</h3><button class="icon-btn" data-close-panel><svg viewBox="0 0 24 24" class="ico"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="panel-body">
+          <label class="field"><span>Переводить на</span><select id="tr-lang" class="select small"></select></label>
+          <label class="field"><span>Движок</span><select id="tr-engine" class="select small"></select></label>
+          <p class="muted small" id="tr-engine-note"></p>
+          <label class="field"><span>Как показывать</span>
+            <select id="tr-mode" class="select small">
+              <option value="parallel">Параллельно: оригинал + перевод</option>
+              <option value="replace">Только перевод</option>
+            </select>
+          </label>
+          <label class="field"><span>Манера (для литературного движка)</span>
+            <select id="tr-style" class="select small">
+              <option value="literary">Литературно — образы и ритм</option>
+              <option value="close">Ближе к оригиналу</option>
+              <option value="free">Вольно и живо</option>
+            </select>
+          </label>
+          <label class="field"><span>Словарь имён и терминов</span>
+            <textarea id="tr-glossary" class="input" rows="3" placeholder="Strelok = Стрелок&#10;the Zone = Зона"></textarea>
+          </label>
+          <div class="tr-keys" id="tr-keys" hidden>
+            <label class="field"><span>Ключ API</span><input id="tr-key" class="input small" type="password" placeholder="sk-… / ключ Anthropic"></label>
+            <label class="field"><span>Модель</span><input id="tr-model" class="input small" placeholder="claude-fable-5-1"></label>
+            <label class="field" id="tr-base-wrap" hidden><span>Base URL</span><input id="tr-base" class="input small" placeholder="https://api.openai.com/v1"></label>
+          </div>
+          <label class="field" id="tr-libre-wrap" hidden><span>Адрес LibreTranslate</span><input id="tr-libre" class="input small" placeholder="https://translate.disroot.org"></label>
+          <button class="btn primary block" id="tr-run">Перевести главу</button>
+          <button class="btn ghost block" id="tr-book" style="margin-top:8px">Перевести всю книгу</button>
+          <div class="tr-bar" id="tr-bar" hidden><i></i></div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn ghost small grow" id="tr-auto">Авто: следующая глава</button>
+            <button class="btn ghost small" id="tr-clear">Сброс</button>
+          </div>
+          <div id="tr-status" class="muted small" style="margin-top:10px"></div>
+        </div>
+      </aside>
+
+      <aside class="rd-panel right" id="rd-panel-find">
+        <div class="panel-head"><h3>Поиск в книге</h3><button class="icon-btn" data-close-panel><svg viewBox="0 0 24 24" class="ico"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="panel-body">
+          <input id="find-input" class="input" placeholder="Что найти…" spellcheck="false">
+          <div id="find-results" class="find-results"></div>
+        </div>
+      </aside>
+
+      <div class="type-pop" id="type-pop" hidden>
+        <div class="tp-row"><span>Тема</span>
+          <div class="theme-dots" id="theme-dots">
+            <button data-theme="night" title="Ночь"></button>
+            <button data-theme="ink" title="Чернила"></button>
+            <button data-theme="sepia" title="Сепия"></button>
+            <button data-theme="paper" title="Бумага"></button>
+          </div>
+        </div>
+        <div class="tp-row"><span>Шрифт</span>
+          <select id="font-family" class="select small">
+            <option value="Literata">Literata (с засечками)</option>
+            <option value="Georgia">Georgia</option>
+            <option value="PT Serif">PT Serif</option>
+            <option value="Inter">Inter (без засечек)</option>
+            <option value="Segoe UI">Segoe UI</option>
+            <option value="JetBrains Mono">Моно</option>
+          </select>
+        </div>
+        <div class="tp-row"><span>Кегль</span><input id="font-size" type="range" min="14" max="34" step="1"><em id="font-size-val">20</em></div>
+        <div class="tp-row"><span>Интерлиньяж</span><input id="line-height" type="range" min="1.3" max="2.4" step="0.05"><em id="line-height-val">1.7</em></div>
+        <div class="tp-row"><span>Ширина</span><input id="page-width" type="range" min="520" max="1200" step="20"><em id="page-width-val">760</em></div>
+        <div class="tp-row"><span>Страницы</span><label class="switch"><input id="paged-mode" type="checkbox"><i></i></label></div>
+        <div class="tp-row"><span>Выключка</span><label class="switch"><input id="justify-mode" type="checkbox"><i></i></label></div>
+      </div>
+
+      <div class="reader-stage" id="reader-stage">
+        <button class="page-nav left" id="page-prev" title="Назад"><svg viewBox="0 0 24 24" class="ico"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="reader-scroll" id="reader-scroll">
+          <article class="reader-content" id="reader-content"></article>
+        </div>
+        <button class="page-nav right" id="page-next" title="Вперёд"><svg viewBox="0 0 24 24" class="ico"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+
+      <div class="reader-foot">
+        <button class="icon-btn small" id="chap-prev" title="Предыдущая глава"><svg viewBox="0 0 24 24" class="ico"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="progress-wrap"><input id="book-progress" type="range" min="0" max="1000" value="0"></div>
+        <span class="pct" id="progress-label">0%</span>
+        <button class="icon-btn small" id="chap-next" title="Следующая глава"><svg viewBox="0 0 24 24" class="ico"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+
+      <div class="sel-pop" id="sel-pop" hidden>
+        <button class="hl-color" data-color="amber" title="Жёлтый"></button>
+        <button class="hl-color" data-color="rose" title="Розовый"></button>
+        <button class="hl-color" data-color="mint" title="Зелёный"></button>
+        <button class="hl-color" data-color="sky" title="Голубой"></button>
+        <button class="hl-color" data-color="violet" title="Сиреневый"></button>
+        <span class="sep"></span>
+        <button class="pop-btn" data-act="note" title="Заметка к цитате"><svg viewBox="0 0 24 24" class="ico"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h5"/></svg></button>
+        <button class="pop-btn" data-act="brain" title="В «Второй мозг»"><svg viewBox="0 0 24 24" class="ico"><path d="M12 4a4 4 0 0 0-4 4 3 3 0 0 0-1 5.8V17a3 3 0 0 0 5 2.2 3 3 0 0 0 5-2.2v-3.2A3 3 0 0 0 16 8a4 4 0 0 0-4-4z"/></svg></button>
+        <button class="pop-btn" data-act="copy" title="Копировать"><svg viewBox="0 0 24 24" class="ico"><rect x="9" y="9" width="11" height="11"/><path d="M5 15V5h10"/></svg></button>
+        <button class="pop-btn danger" data-act="clear" title="Снять выделение" hidden><svg viewBox="0 0 24 24" class="ico"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
+      </div>
+    </section>
+
+    <!-- SECOND BRAIN -->
+    <section class="view brain-view" id="view-brain">
+      <div class="brain-list">
+        <div class="bl-head">
+          <div class="seg wrap" id="brain-kind">
+            <button class="active" data-kind="all">Всё</button>
+            <button data-kind="recipe">Рецепты</button>
+            <button data-kind="guide">Гайды</button>
+            <button data-kind="note">Заметки</button>
+            <button data-kind="idea">Идеи</button>
+          </div>
+          <input id="brain-search" class="input" placeholder="Фильтр записей…" spellcheck="false">
+        </div>
+        <div id="brain-tags" class="tag-row tight"></div>
+        <div id="brain-items" class="bl-items"></div>
+        <div class="bl-foot">
+          <button class="btn primary block" id="brain-new">+ Новая запись</button>
+          <button class="btn ghost block" id="brain-recipe">🍳 Вставить рецепт со страницы</button>
+          <div class="row">
+            <button class="btn ghost small" id="brain-import">Импорт .md</button>
+            <button class="btn ghost small" id="brain-export">Экспорт</button>
+          </div>
+        </div>
+      </div>
+      <div class="brain-editor" id="brain-editor">
+        <div class="be-empty" id="be-empty">
+          <div class="empty-art">🧠</div>
+          <h2>Второй мозг</h2>
+          <p>Рецепты, гайды, инструкции, выписки из книг — всё в одном месте, с тегами, картинками и поиском.</p>
+          <div class="tmpl-row">
+            <button class="tmpl" data-tmpl="recipe"><b>🍳 Рецепт</b><span>Ингредиенты, шаги, время</span></button>
+            <button class="tmpl" data-tmpl="guide"><b>🧭 Гайд</b><span>Шаги, чек-лист, ссылки</span></button>
+            <button class="tmpl" data-tmpl="note"><b>📝 Заметка</b><span>Чистый лист</span></button>
+          </div>
+        </div>
+        <div class="be-main" id="be-main" hidden>
+          <div class="be-cover" id="be-cover">
+            <img id="be-cover-img" alt="" hidden>
+            <div class="be-cover-empty" id="be-cover-empty">＋ обложка</div>
+            <button class="cover-clear" id="be-cover-clear" title="Убрать обложку" hidden>×</button>
+          </div>
+          <div class="be-head">
+            <input id="be-title" class="be-title" placeholder="Название…" spellcheck="false">
+            <div class="be-meta">
+              <select id="be-kind" class="select small">
+                <option value="recipe">🍳 Рецепт</option>
+                <option value="guide">🧭 Гайд</option>
+                <option value="note">📝 Заметка</option>
+                <option value="idea">💡 Идея</option>
+              </select>
+              <input id="be-tags" class="input small" placeholder="теги через запятую" spellcheck="false">
+              <button class="icon-btn" id="be-pin" title="Закрепить"><svg viewBox="0 0 24 24" class="ico"><path d="M12 3l2 5h5l-4 4 1.5 6L12 15l-4.5 3L9 12 5 8h5z"/></svg></button>
+              <button class="icon-btn" id="be-preview-toggle" title="Предпросмотр"><svg viewBox="0 0 24 24" class="ico"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+              <button class="icon-btn" id="be-translate" title="Перевести запись"><svg viewBox="0 0 24 24" class="ico"><path d="M4 6h10M9 4v2c0 4-2.5 7-5 8"/><path d="M7 11c1.5 2.5 3.5 4 6 5"/><path d="M12 20l4-10 4 10M13.5 17h5"/></svg></button>
+              <button class="icon-btn" id="be-export" title="Сохранить как .md"><svg viewBox="0 0 24 24" class="ico"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg></button>
+              <button class="icon-btn danger" id="be-delete" title="Удалить"><svg viewBox="0 0 24 24" class="ico"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
+            </div>
+            <div class="be-fields" id="be-fields"></div>
+          </div>
+          <div class="md-toolbar" id="md-toolbar">
+            <button data-md="h2" title="Заголовок">H</button>
+            <button data-md="b" title="Жирный"><b>B</b></button>
+            <button data-md="i" title="Курсив"><i>I</i></button>
+            <button data-md="mark" title="Выделить"><mark>H</mark></button>
+            <button data-md="ul" title="Список">•</button>
+            <button data-md="task" title="Чек-лист">☑</button>
+            <button data-md="quote" title="Цитата">❝</button>
+            <button data-md="code" title="Код">{ }</button>
+            <button data-md="table" title="Таблица">▦</button>
+            <button data-md="hr" title="Разделитель">—</button>
+            <button data-md="img" title="Картинка">🖼</button>
+            <button data-md="link" title="Ссылка">🔗</button>
+            <span class="sep"></span>
+            <button data-md="tmpl-recipe" title="Шаблон рецепта">🍳</button>
+            <button data-md="tmpl-guide" title="Шаблон гайда">🧭</button>
+            <span class="grow"></span>
+            <span class="muted small" id="be-saved">сохранено</span>
+          </div>
+          <div class="be-panes" id="be-panes">
+            <textarea id="be-body" class="be-body" spellcheck="true" placeholder="Пиши в Markdown: # заголовок, - список, - [ ] чек-лист, **жирный**, ==выделение==, | таблица |"></textarea>
+            <div id="be-preview" class="be-preview md"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HIGHLIGHTS -->
+    <section class="view" id="view-highlights">
+      <div class="view-head">
+        <div>
+          <h1>Выделения</h1>
+          <p class="muted">Всё, что ты подсветил в книгах — с заметками и цветами</p>
+        </div>
+        <div class="head-tools">
+          <div class="seg" id="hl-color-filter">
+            <button class="active" data-color="all">Все</button>
+            <button data-color="amber"><i class="dot amber"></i></button>
+            <button data-color="rose"><i class="dot rose"></i></button>
+            <button data-color="mint"><i class="dot mint"></i></button>
+            <button data-color="sky"><i class="dot sky"></i></button>
+            <button data-color="violet"><i class="dot violet"></i></button>
+          </div>
+          <input id="hl-search" class="input" placeholder="Поиск по цитатам…" spellcheck="false">
+          <button class="btn ghost" id="hl-export">Экспорт в .md</button>
+        </div>
+      </div>
+      <div id="hl-groups" class="hl-groups"></div>
+    </section>
+
+    <!-- CATALOG -->
+    <section class="view" id="view-catalog">
+      <div class="view-head">
+        <div>
+          <h1>Бесплатные библиотеки</h1>
+          <p class="muted">Один поиск по всем источникам сразу · свои OPDS-каталоги добавляются в настройках</p>
+        </div>
+        <div class="head-tools">
+          <input id="cat-search" class="input wide" placeholder="Найти книгу: название или автор — ищу сразу во всех каталогах" spellcheck="false">
+          <button class="btn primary" id="cat-go">Искать</button>
+        </div>
+      </div>
+      <div id="source-cards" class="source-cards"></div>
+      <div class="cat-crumbs" id="cat-crumbs"></div>
+      <div id="cat-results" class="cat-results"></div>
+      <div class="cat-pager" id="cat-pager"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="view-head"><div><h1>Настройки</h1><p class="muted">Внешний вид, чтение, данные</p></div></div>
+      <div class="settings-grid">
+        <div class="card">
+          <h3>Профиль</h3>
+          <div class="row gap">
+            <div class="avatar big" id="settings-avatar"><img id="settings-avatar-img" alt="" hidden><span id="settings-avatar-letter">L</span></div>
+            <div class="grow">
+              <label class="field"><span>Имя</span><input id="set-name" class="input" placeholder="Как тебя называть"></label>
+              <div class="row">
+                <button class="btn ghost small" id="set-avatar">Выбрать аватар</button>
+                <button class="btn ghost small" id="set-avatar-clear">Убрать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Тема</h3>
+          <div class="theme-cards" id="theme-cards">
+            <button data-theme="night"><i></i><span>Ночь</span></button>
+            <button data-theme="ink"><i></i><span>Чернила</span></button>
+            <button data-theme="sepia"><i></i><span>Сепия</span></button>
+            <button data-theme="paper"><i></i><span>Бумага</span></button>
+          </div>
+          <h3 class="mt">Акцент</h3>
+          <div class="accent-row" id="accent-row">
+            <button data-accent="amber"></button>
+            <button data-accent="rose"></button>
+            <button data-accent="mint"></button>
+            <button data-accent="sky"></button>
+            <button data-accent="violet"></button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Свои каталоги (OPDS)</h3>
+          <p class="muted small">Добавь ссылку на любой OPDS-фид — он появится в разделе «Каталоги».</p>
+          <label class="field"><span>Название</span><input id="cat-name" class="input" placeholder="Моя библиотека"></label>
+          <label class="field"><span>URL фида</span><input id="cat-url" class="input" placeholder="https://example.org/opds"></label>
+          <label class="field"><span>URL поиска (необязательно)</span><input id="cat-surl" class="input" placeholder="https://example.org/opds/search?q="></label>
+          <button class="btn primary small" id="cat-add">Добавить каталог</button>
+          <div id="custom-cats" class="custom-cats"></div>
+        </div>
+        <div class="card">
+          <h3>Синхронизация с телефоном</h3>
+          <p class="muted small">Книги, заметки, выделения и позиция чтения живут в твоём приватном
+            GitHub-репозитории. Сервер не нужен, данные не уходят никому постороннему.</p>
+          <label class="field"><span>GitHub-токен (права repo)</span><input id="sync-token" class="input" type="password" placeholder="ghp_…"></label>
+          <div class="row">
+            <button class="btn ghost small" id="sync-token-launcher">Взять токен из лаунчера</button>
+            <button class="btn ghost small" id="sync-check">Проверить</button>
+          </div>
+          <label class="field mt"><span>Репозиторий для синхронизации</span><input id="sync-repo" class="input" placeholder="lumen-sync"></label>
+          <label class="check"><input id="sync-auto" type="checkbox"><span>Синхронизировать автоматически при запуске и выходе</span></label>
+          <button class="btn primary block mt" id="sync-now">Синхронизировать сейчас</button>
+          <div id="sync-status" class="muted small" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <h3>Телефон</h3>
+          <p class="muted small">Android-приложение собирается на GitHub Actions и выкладывается
+            в релизы — APK скачивается прямо на телефон.</p>
+          <div id="phone-status" class="muted small"></div>
+          <div class="row mt">
+            <button class="btn ghost small" id="phone-release">Открыть страницу загрузки</button>
+            <button class="btn ghost small" id="phone-qr">Показать ссылку</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Данные</h3>
+          <div id="data-stats" class="data-stats muted small"></div>
+          <div class="row">
+            <button class="btn ghost small" id="data-backup">Резервная копия</button>
+            <button class="btn ghost small" id="data-folder">Открыть папку</button>
+          </div>
+          <h3 class="mt">Горячие клавиши</h3>
+          <ul class="keys muted small">
+            <li><kbd>Ctrl</kbd>+<kbd>K</kbd> — поиск по всему</li>
+            <li><kbd>Ctrl</kbd>+<kbd>O</kbd> — добавить книгу</li>
+            <li><kbd>Ctrl</kbd>+<kbd>N</kbd> — новая запись</li>
+            <li><kbd>←</kbd> <kbd>→</kbd> / <kbd>Space</kbd> — страницы в читалке</li>
+            <li><kbd>Ctrl</kbd>+<kbd>F</kbd> — поиск в книге</li>
+            <li><kbd>Esc</kbd> — назад / закрыть</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-back" id="modal-back" hidden>
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="drop-hint" id="drop-hint" hidden><div><b>Отпусти, чтобы добавить</b><span>FB2 · EPUB · TXT · MD · HTML · RTF · DOCX · PDF</span></div></div>
+<div class="toast-wrap" id="toast-wrap"></div>
+<div class="search-pop" id="search-pop" hidden><div class="sp-body" id="sp-body"></div></div>
+
+<script src="../lib/markdown.js"></script>
+<script src="app.js"></script>
+<script src="library.js"></script>
+<script src="reader.js"></script>
+<script src="brain.js"></script>
+<script src="catalog.js"></script>
+<script src="translate-ui.js"></script>
+<script src="boot.js"></script>
+</body>
+</html>

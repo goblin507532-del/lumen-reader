@@ -1,0 +1,10 @@
+node_modules/
+dist/
+mobile/node_modules/
+mobile/android/
+mobile/ios/
+mobile/www/vendor/jszip.min.js
+mobile/www/lib/
+mobile/assets/
+out/
+*.log

@@ -1,0 +1,15 @@
+{
+  "appId": "com.gobli.lumenreader",
+  "appName": "Lumen Reader",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#15110E"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#F0A93C"
+    }
+  }
+}

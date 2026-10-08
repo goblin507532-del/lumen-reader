@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="night" data-accent="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="color-scheme" content="dark light">
+<title>Lumen Reader</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="top" id="top">
+  <button class="ico-btn" id="back" hidden aria-label="Назад">
+    <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <div class="title">
+    <strong id="screen-title">Библиотека</strong>
+    <span id="screen-sub"></span>
+  </div>
+  <button class="ico-btn" id="top-action" hidden aria-label="Действие"></button>
+  <button class="ico-btn" id="sync-btn" aria-label="Синхронизация">
+    <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.7L4 16"/><path d="M4 20v-4h4"/></svg>
+  </button>
+</header>
+
+<main id="main">
+  <!-- LIBRARY -->
+  <section class="screen active" id="s-library">
+    <div class="search-row">
+      <input id="lib-q" class="field" placeholder="Поиск по библиотеке" spellcheck="false">
+    </div>
+    <div class="chips" id="lib-chips"></div>
+    <div id="lib-list" class="book-list"></div>
+    <div class="empty" id="lib-empty" hidden>
+      <div class="art">📚</div>
+      <h2>Книг пока нет</h2>
+      <p>Включи синхронизацию в настройках — библиотека, заметки и прогресс приедут с компьютера.</p>
+      <button class="btn primary" data-go="settings">Настроить синхронизацию</button>
+    </div>
+  </section>
+
+  <!-- READER -->
+  <section class="screen reader" id="s-reader">
+    <div class="reader-scroll" id="reader-scroll">
+      <article class="reader-body" id="reader-body"></article>
+    </div>
+    <div class="reader-bar" id="reader-bar">
+      <button class="ico-btn" id="r-toc" aria-label="Содержание"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+      <button class="ico-btn" id="r-prev" aria-label="Предыдущая глава"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="r-progress"><i id="r-fill"></i><span id="r-pct">0%</span></div>
+      <button class="ico-btn" id="r-next" aria-label="Следующая глава"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="ico-btn" id="r-type" aria-label="Шрифт"><svg viewBox="0 0 24 24"><path d="M5 18L10 6l5 12M7 14h6"/></svg></button>
+    </div>
+    <div class="sheet" id="toc-sheet" hidden>
+      <div class="sheet-head"><b>Содержание</b><button class="ico-btn" data-close-sheet><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="sheet-body" id="toc-body"></div>
+    </div>
+    <div class="sheet" id="type-sheet" hidden>
+      <div class="sheet-head"><b>Как читать</b><button class="ico-btn" data-close-sheet><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="sheet-body">
+        <label class="row"><span>Кегль</span><input id="t-size" type="range" min="15" max="30" step="1"></label>
+        <label class="row"><span>Интерлиньяж</span><input id="t-line" type="range" min="1.3" max="2.2" step="0.05"></label>
+        <div class="row"><span>Тема</span>
+          <div class="theme-dots" id="t-theme">
+            <button data-theme="night"></button>
+            <button data-theme="ink"></button>
+            <button data-theme="sepia"></button>
+            <button data-theme="paper"></button>
+          </div>
+        </div>
+        <label class="row"><span>Выключка</span><input id="t-justify" type="checkbox"></label>
+      </div>
+    </div>
+    <div class="selpop" id="selpop" hidden>
+      <button class="dot amber" data-color="amber"></button>
+      <button class="dot rose" data-color="rose"></button>
+      <button class="dot mint" data-color="mint"></button>
+      <button class="dot sky" data-color="sky"></button>
+      <button class="dot violet" data-color="violet"></button>
+      <button class="pop-act" data-act="note">Заметка</button>
+      <button class="pop-act" data-act="copy">Копировать</button>
+      <button class="pop-act danger" data-act="del" hidden>Снять</button>
+    </div>
+  </section>
+
+  <!-- BRAIN -->
+  <section class="screen" id="s-brain">
+    <div class="search-row">
+      <input id="brain-q" class="field" placeholder="Поиск по записям" spellcheck="false">
+    </div>
+    <div class="chips" id="brain-kinds"></div>
+    <div id="brain-list" class="note-list"></div>
+    <button class="fab" id="note-add" aria-label="Новая запись">+</button>
+  </section>
+
+  <!-- NOTE -->
+  <section class="screen" id="s-note">
+    <div class="note-view" id="note-view"></div>
+    <div class="note-edit" id="note-edit" hidden>
+      <input id="note-title" class="field big" placeholder="Название">
+      <input id="note-tags" class="field" placeholder="теги через запятую">
+      <textarea id="note-body" class="field body" placeholder="Markdown: # заголовок, - [ ] пункт, **жирный**"></textarea>
+    </div>
+  </section>
+
+  <!-- HIGHLIGHTS -->
+  <section class="screen" id="s-marks">
+    <div class="chips" id="mark-colors"></div>
+    <div id="mark-list" class="mark-list"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="s-settings">
+    <div class="card">
+      <h3>Синхронизация</h3>
+      <p class="muted">Данные лежат в твоём приватном GitHub-репозитории: компьютер и телефон видят
+        одну библиотеку, одни заметки и одну позицию чтения.</p>
+      <label class="lab">GitHub-токен (scope repo)</label>
+      <input id="set-token" class="field" type="password" placeholder="ghp_…" spellcheck="false">
+      <label class="lab">Владелец</label>
+      <input id="set-owner" class="field" placeholder="логин на GitHub" spellcheck="false">
+      <label class="lab">Репозиторий</label>
+      <input id="set-repo" class="field" placeholder="lumen-sync" spellcheck="false">
+      <label class="row"><span>Синхронизировать при запуске</span><input id="set-auto" type="checkbox"></label>
+      <button class="btn primary block" id="set-sync">Синхронизировать сейчас</button>
+      <div class="muted small" id="set-status"></div>
+    </div>
+    <div class="card">
+      <h3>Уведомления</h3>
+      <label class="row"><span>Говорить о новых книгах и заметках</span><input id="set-notify" type="checkbox"></label>
+      <label class="row"><span>Напоминать читать</span><input id="set-remind" type="checkbox"></label>
+      <label class="row"><span>Во сколько</span><input id="set-remind-time" class="field time" type="time" value="20:30"></label>
+      <button class="btn ghost block" id="set-test-notify">Проверить уведомление</button>
+    </div>
+    <div class="card">
+      <h3>О приложении</h3>
+      <div class="muted small" id="about-box"></div>
+      <button class="btn ghost block" id="set-wipe">Стереть локальные данные</button>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-go="library"><svg viewBox="0 0 24 24"><path d="M4 5h6v14H4zM14 5h6v14h-6z"/><path d="M4 9h6M14 9h6"/></svg><span>Книги</span></button>
+  <button class="tab" data-go="brain"><svg viewBox="0 0 24 24"><path d="M12 4a4 4 0 0 0-4 4 3 3 0 0 0-1 5.8V17a3 3 0 0 0 5 2.2 3 3 0 0 0 5-2.2v-3.2A3 3 0 0 0 16 8a4 4 0 0 0-4-4z"/></svg><span>Мозг</span></button>
+  <button class="tab" data-go="marks"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 15l9-9 3 3-9 9H7z"/></svg><span>Цитаты</span></button>
+  <button class="tab" data-go="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg><span>Ещё</span></button>
+</nav>
+
+<div class="toast-wrap" id="toasts"></div>
+<div class="modal-back" id="modal-back" hidden><div class="modal" id="modal"></div></div>
+
+<script src="vendor/jszip.min.js"></script>
+<script src="lib/util.js"></script>
+<script src="lib/markdown.js"></script>
+<script src="lib/fb2.js"></script>
+<script src="lib/epub.js"></script>
+<script src="lib/parse.js"></script>
+<script src="lib/sync.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

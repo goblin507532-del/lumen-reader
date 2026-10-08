@@ -1,0 +1,23 @@
+{
+  "name": "lumen-reader-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lumen Reader for Android — library, reader, second brain, sync",
+  "scripts": {
+    "prepare-www": "node ../tools/build-mobile.js",
+    "sync": "npm run prepare-www && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.2",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.2",
+    "@capacitor/local-notifications": "^6.1.1",
+    "@capacitor/preferences": "^6.0.3",
+    "@capacitor/status-bar": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.0"
+  }
+}
