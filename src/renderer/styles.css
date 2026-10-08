@@ -480,6 +480,7 @@ input[type=range]::-webkit-slider-thumb {
   font-family: var(--rf, Literata), Cambria, Georgia, serif;
   font-size: var(--rs, 20px);
   line-height: var(--rl, 1.7);
+  font-weight: var(--rfw, 400);
   user-select: text;
 }
 .reader-scroll.paged .reader-content {
@@ -917,3 +918,34 @@ input[type=range]::-webkit-slider-thumb {
   background: rgba(12, 10, 8, .72); color: var(--acc2); backdrop-filter: blur(4px);
 }
 .check { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text2); cursor: pointer; margin-top: 6px; }
+
+/* The book may ship its own colours and faces; this is the reader winning. */
+.reader-content.force-font,
+.reader-content.force-font p,
+.reader-content.force-font span,
+.reader-content.force-font div,
+.reader-content.force-font li,
+.reader-content.force-font td,
+.reader-content.force-font th,
+.reader-content.force-font h1,
+.reader-content.force-font h2,
+.reader-content.force-font h3,
+.reader-content.force-font h4,
+.reader-content.force-font b,
+.reader-content.force-font i,
+.reader-content.force-font em,
+.reader-content.force-font strong {
+  font-family: var(--rf), Cambria, Georgia, serif !important;
+  color: var(--paper-text) !important;
+  background-color: transparent !important;
+}
+.reader-content.force-font a { color: var(--acc) !important; }
+.reader-content.force-font mark.hl.amber { background-color: color-mix(in srgb, var(--hl-amber) 42%, transparent) !important; }
+.reader-content.force-font mark.hl.rose { background-color: color-mix(in srgb, var(--hl-rose) 40%, transparent) !important; }
+.reader-content.force-font mark.hl.mint { background-color: color-mix(in srgb, var(--hl-mint) 38%, transparent) !important; }
+.reader-content.force-font mark.hl.sky { background-color: color-mix(in srgb, var(--hl-sky) 38%, transparent) !important; }
+.reader-content.force-font mark.hl.violet { background-color: color-mix(in srgb, var(--hl-violet) 38%, transparent) !important; }
+.reader-content.force-font mark.find-hit { background-color: color-mix(in srgb, var(--acc) 55%, transparent) !important; }
+.reader-content.force-font .tr-line { color: color-mix(in srgb, var(--paper-text) 96%, transparent) !important; }
+.reader-content.force-font .tr-origin { color: color-mix(in srgb, var(--paper-text) 58%, transparent) !important; }
+.reader-content.force-font code, .reader-content.force-font pre { font-family: Consolas, monospace !important; }

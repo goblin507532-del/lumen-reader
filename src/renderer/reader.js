@@ -143,6 +143,8 @@ const Reader = {
     const content = this.content();
     content.innerHTML = ch ? ch.html : '';
     content.classList.toggle('justify', !!State.settings.justify);
+    content.classList.toggle('force-font', State.settings.forceFont !== false);
+    this.page = 0;
     $('#rd-chapter-title').textContent = (ch ? ch.title : '') + ' · ' + (this.chapter + 1) + '/' + this.chapters.length;
     this.applyMode();
     this.applyHighlights();
@@ -182,6 +184,7 @@ const Reader = {
 
   scrollHome() {
     const s = this.scroller();
+    this.page = 0;
     if (State.settings.paged) s.scrollLeft = 0;
     else s.scrollTop = 0;
   },
@@ -197,6 +200,7 @@ const Reader = {
       const host = s.getBoundingClientRect();
       const x = box.left - host.left + s.scrollLeft;
       const page = Math.floor(x / Math.max(1, s.clientWidth));
+      this.page = page;
       s.scrollLeft = page * s.clientWidth;
     } else {
       const box = range.getBoundingClientRect();
@@ -435,11 +439,53 @@ const Reader = {
     return Math.max(1, Math.round(s.scrollWidth / Math.max(1, s.clientWidth)));
   },
 
+  // Page turns animate to an exact page, and the page index is tracked rather
+  // than read back mid-animation — reading scrollLeft while it moves is what
+  // used to make two quick turns land on the same page.
+  flip(dir) {
+    const s = this.scroller();
+    const width = s.clientWidth || 1;
+    const pages = Math.max(1, Math.round(s.scrollWidth / width));
+    const target = Math.max(0, Math.min(pages - 1, (this.page || 0) + dir));
+    if (target === (this.page || 0)) return false;
+    this.page = target;
+    this.animateTo(target * width);
+    return true;
+  },
+
+  animateTo(left) {
+    const s = this.scroller();
+    if (this.anim) cancelAnimationFrame(this.anim);
+    const from = s.scrollLeft;
+    const delta = left - from;
+    if (Math.abs(delta) < 2) { s.scrollLeft = left; return; }
+    const start = performance.now();
+    const dur = Math.min(360, 160 + Math.abs(delta) / 6);
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      s.scrollLeft = from + delta * eased;
+      if (t < 1) this.anim = requestAnimationFrame(step);
+      else {
+        this.anim = null;
+        s.scrollLeft = left;
+        this.updateProgress();
+        if (window.Translator) Translator.ensure();
+      }
+    };
+    this.anim = requestAnimationFrame(step);
+  },
+
+  pageCountNow() {
+    const s = this.scroller();
+    return Math.max(1, Math.round(s.scrollWidth / Math.max(1, s.clientWidth)));
+  },
+
   next() {
     const s = this.scroller();
     if (State.settings.paged) {
-      if (s.scrollLeft + s.clientWidth * 1.5 < s.scrollWidth) {
-        s.scrollLeft = (Math.round(s.scrollLeft / s.clientWidth) + 1) * s.clientWidth;
+      if ((this.page || 0) < this.pageCountNow() - 1) {
+        this.flip(1);
         this.updateProgress();
         return;
       }
@@ -455,8 +501,8 @@ const Reader = {
   prev() {
     const s = this.scroller();
     if (State.settings.paged) {
-      if (s.scrollLeft > 4) {
-        s.scrollLeft = Math.max(0, (Math.round(s.scrollLeft / s.clientWidth) - 1) * s.clientWidth);
+      if ((this.page || 0) > 0) {
+        this.flip(-1);
         this.updateProgress();
         return;
       }
@@ -513,7 +559,7 @@ const Reader = {
     const percent = Math.min(100, ((before + frac * this.lengths[this.chapter]) / this.total) * 100);
     const s = this.scroller();
     const pageInfo = State.settings.paged && s.scrollWidth > s.clientWidth
-      ? ' · стр. ' + (Math.round(s.scrollLeft / s.clientWidth) + 1) + '/' + this.pageCount()
+      ? ' · стр. ' + ((this.page || 0) + 1) + '/' + this.pageCountNow()
       : '';
     $('#progress-label').textContent = Math.round(percent) + '%' + pageInfo;
     const range = $('#book-progress');

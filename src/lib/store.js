@@ -3,6 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
+// Bump when the parsers change what the cached HTML looks like.
+const PARSER_VERSION = 2;
+
 const DEFAULTS = {
   version: 1,
   books: [],
@@ -94,6 +97,8 @@ class Store {
       const p = this.cachePath(id);
       const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
       if (mtimeMs && raw.__mtime !== mtimeMs) return null;
+      // A newer parser (stripped colours, better chapters) invalidates old HTML.
+      if (raw.__parser !== PARSER_VERSION) return null;
       return raw;
     } catch (e) {
       return null;
@@ -103,6 +108,7 @@ class Store {
   writeCache(id, payload, mtimeMs) {
     try {
       payload.__mtime = mtimeMs || 0;
+      payload.__parser = PARSER_VERSION;
       fs.writeFileSync(this.cachePath(id), JSON.stringify(payload), 'utf8');
     } catch (e) { /* cache is best-effort */ }
   }

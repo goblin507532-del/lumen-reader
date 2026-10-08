@@ -96,17 +96,32 @@ function attr(tag, name) {
   return unescapeXml(m[2] !== undefined ? m[2] : m[3]);
 }
 
-function sanitizeHtml(html) {
+// Book styling that fights the reader: hard-coded colours, faces and sizes
+// baked into the file. Layout hints (alignment, indents) are left alone.
+const STYLE_KILL = /(^|;)\s*(color|background|background-color|font|font-family|font-size|font-weight|line-height|text-shadow|-webkit-text-fill-color)\s*:[^;]*/gi;
+
+function stripBookStyling(html) {
   return String(html || '')
+    .replace(/\sstyle\s*=\s*("([^"]*)"|'([^']*)')/gi, function (full, _q, dq, sq) {
+      const value = dq !== undefined ? dq : sq;
+      const kept = value.replace(STYLE_KILL, '').replace(/^\s*;+/, '').trim();
+      return kept ? ' style="' + kept.replace(/"/g, '') + '"' : '';
+    })
+    .replace(/\s(color|bgcolor|face|size)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/<\/?font\b[^>]*>/gi, '');
+}
+
+function sanitizeHtml(html) {
+  return stripBookStyling(String(html || '')
     .replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
     .replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[^>]*>/gi, '')
     .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/(href|src)\s*=\s*("|')\s*javascript:[^"']*\2/gi, '$1="#"');
+    .replace(/(href|src)\s*=\s*("|')\s*javascript:[^"']*\2/gi, '$1="#"'));
 }
 
 const API = {
   uid, decodeBuffer, stripTags, unescapeXml, escapeHtml, attr, sanitizeHtml,
-  asBytes, toBase64, fromBase64
+  stripBookStyling, asBytes, toBase64, fromBase64
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;

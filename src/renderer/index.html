@@ -195,14 +195,36 @@
         </div>
         <div class="tp-row"><span>Шрифт</span>
           <select id="font-family" class="select small">
-            <option value="Literata">Literata (с засечками)</option>
-            <option value="Georgia">Georgia</option>
-            <option value="PT Serif">PT Serif</option>
-            <option value="Inter">Inter (без засечек)</option>
-            <option value="Segoe UI">Segoe UI</option>
-            <option value="JetBrains Mono">Моно</option>
+            <optgroup label="С засечками">
+              <option value="Cambria">Cambria</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Constantia">Constantia</option>
+              <option value="Palatino Linotype">Palatino</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Bookman Old Style">Bookman</option>
+              <option value="Literata">Literata (если есть)</option>
+            </optgroup>
+            <optgroup label="Без засечек">
+              <option value="Segoe UI">Segoe UI</option>
+              <option value="Calibri">Calibri</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Tahoma">Tahoma</option>
+              <option value="Arial">Arial</option>
+            </optgroup>
+            <optgroup label="Особые">
+              <option value="Consolas">Моноширинный</option>
+              <option value="Comic Sans MS">Comic Sans</option>
+            </optgroup>
           </select>
         </div>
+        <div class="tp-row"><span>Насыщенность</span>
+          <select id="font-weight" class="select small">
+            <option value="400">Обычная</option>
+            <option value="500">Чуть плотнее</option>
+            <option value="600">Полужирная</option>
+          </select>
+        </div>
+        <div class="tp-row"><span>Мой шрифт и цвет</span><label class="switch"><input id="force-font" type="checkbox" checked><i></i></label></div>
         <div class="tp-row"><span>Кегль</span><input id="font-size" type="range" min="14" max="34" step="1"><em id="font-size-val">20</em></div>
         <div class="tp-row"><span>Интерлиньяж</span><input id="line-height" type="range" min="1.3" max="2.4" step="0.05"><em id="line-height-val">1.7</em></div>
         <div class="tp-row"><span>Ширина</span><input id="page-width" type="range" min="520" max="1200" step="20"><em id="page-width-val">760</em></div>

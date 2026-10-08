@@ -145,6 +145,28 @@ function selfTest() {
         await new Promise((r) => setTimeout(r, 800));
         await shot('04b-paged');
         console.log('[paged]', await run('JSON.stringify({pages:Reader.pageCount(), chapter:Reader.chapter, pct:document.querySelector("#progress-label").textContent})'));
+
+        // Page turning: a nudge must not flip, a notch must flip exactly one,
+        // two quick turns must advance two, and the slide must animate.
+        await run('Reader.showChapter(1,0)');
+        await new Promise((r) => setTimeout(r, 900));
+        const fire = (dy) => 'document.querySelector("#reader-stage").dispatchEvent(new WheelEvent("wheel",{deltaY:' + dy + ',bubbles:true,cancelable:true}))';
+        await run(fire(12));
+        await new Promise((r) => setTimeout(r, 350));
+        const nudge = await run('Reader.page');
+        await run(fire(120));
+        await new Promise((r) => setTimeout(r, 110));
+        const mid = await run('Math.round(document.querySelector("#reader-scroll").scrollLeft)');
+        await new Promise((r) => setTimeout(r, 600));
+        const after = await run('JSON.stringify({page:Reader.page, left:Math.round(document.querySelector("#reader-scroll").scrollLeft), width:document.querySelector("#reader-scroll").clientWidth})');
+        await run('Reader.next(); Reader.next();');
+        await new Promise((r) => setTimeout(r, 800));
+        const twice = await run('Reader.page');
+        await run('Reader.prev();');
+        await new Promise((r) => setTimeout(r, 600));
+        const backOne = await run('Reader.page');
+        console.log('[paging]', JSON.stringify({ afterNudge: nudge, midAnimation: mid, afterNotch: JSON.parse(after), afterTwo: twice, afterPrev: backOne }));
+        console.log('[fonts]', await run('(function(){var c=document.querySelector("#reader-content");var p=c.querySelector("p")||c.querySelector("div");var cs=getComputedStyle(p);return JSON.stringify({force:c.classList.contains("force-font"),family:cs.fontFamily.split(",")[0],weight:cs.fontWeight});})()'));
       }
       if (big) {
         await run('Reader.togglePanel("#rd-panel-tr", document.querySelector("#rd-translate")); document.querySelector("#tr-mode").value="parallel";');
@@ -153,6 +175,16 @@ function selfTest() {
         await new Promise((r) => setTimeout(r, 12000));
         console.log('[translate]', await run('JSON.stringify({status:document.querySelector("#tr-status").textContent, lines:document.querySelectorAll(".tr-line").length, sample:(document.querySelector(".tr-line")||{}).textContent})'));
         await shot('09-translate');
+        // Does the translation survive a scroll and a page turn?
+        await run('document.querySelector("#reader-scroll").dispatchEvent(new WheelEvent("wheel",{deltaY:12,bubbles:true}))');
+        await new Promise((r) => setTimeout(r, 600));
+        console.log('[tr after wheel]', await run('JSON.stringify({lines:document.querySelectorAll(".tr-line").length, chapter:Reader.chapter})'));
+        await run('Reader.next()');
+        await new Promise((r) => setTimeout(r, 900));
+        console.log('[tr after next]', await run('JSON.stringify({lines:document.querySelectorAll(".tr-line").length, chapter:Reader.chapter})'));
+        await run('var s=document.querySelector("#reader-scroll"); s.scrollLeft = s.scrollLeft + 3; s.dispatchEvent(new Event("scroll"));');
+        await new Promise((r) => setTimeout(r, 700));
+        console.log('[tr after nudge]', await run('JSON.stringify({lines:document.querySelectorAll(".tr-line").length, chapter:Reader.chapter})'));
       }
       // Whole-book translation on the small FB2, then check that the blocks
       // the renderer sees line up with the ones the main process extracted.

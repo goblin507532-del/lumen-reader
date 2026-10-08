@@ -85,18 +85,74 @@ $('#chap-next').addEventListener('click', () => Reader.showChapter(Reader.chapte
 $('#chap-prev').addEventListener('click', () => Reader.showChapter(Reader.chapter - 1, 0));
 $('#book-progress').addEventListener('change', (e) => Reader.seek(+e.target.value));
 $('#reader-scroll').addEventListener('scroll', () => {
-  if (State.view === 'reader') {
-    Reader.hideSelPop();
-    Reader.updateProgress();
-  }
+  if (State.view !== 'reader') return;
+  Reader.hideSelPop();
+  Reader.updateProgress();
+  if (window.Translator) Translator.ensure();
 }, { passive: true });
+
+// One notch of the wheel turns one page: small movements accumulate instead of
+// firing a flip each time, and a flip in flight swallows the rest.
+let wheelAcc = 0;
+let wheelRest = null;
 $('#reader-stage').addEventListener('wheel', (e) => {
   if (!State.settings.paged || State.view !== 'reader') return;
   e.preventDefault();
-  if (Math.abs(e.deltaY) < 8) return;
-  if (e.deltaY > 0) Reader.next();
-  else Reader.prev();
+  if (Reader.anim) return;
+  wheelAcc += e.deltaY;
+  if (wheelRest) clearTimeout(wheelRest);
+  wheelRest = setTimeout(() => { wheelAcc = 0; }, 260);
+  const step = e.deltaMode === 1 ? 3 : 90;
+  if (wheelAcc > step) { wheelAcc = 0; Reader.next(); }
+  else if (wheelAcc < -step) { wheelAcc = 0; Reader.prev(); }
 }, { passive: false });
+
+// Drag the page sideways with the mouse or a touchscreen.
+(function enableSwipe() {
+  const stage = $('#reader-stage');
+  let startX = 0;
+  let startY = 0;
+  let startLeft = 0;
+  let dragging = false;
+  let moved = false;
+
+  stage.addEventListener('pointerdown', (e) => {
+    if (!State.settings.paged || State.view !== 'reader') return;
+    if (e.target.closest('.rd-panel, .type-pop, .sel-pop, .page-nav, button, a, input, select')) return;
+    if (!window.getSelection().isCollapsed) return;
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = Reader.scroller().scrollLeft;
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (!moved && (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy))) return;
+    moved = true;
+    Reader.scroller().scrollLeft = startLeft - dx;
+  });
+
+  const finish = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    if (!moved) return;
+    const dx = e.clientX - startX;
+    const width = Reader.scroller().clientWidth || 1;
+    if (Math.abs(dx) > width * 0.18) {
+      if (dx < 0) Reader.next();
+      else Reader.prev();
+    } else {
+      Reader.animateTo((Reader.page || 0) * width);
+    }
+  };
+  stage.addEventListener('pointerup', finish);
+  stage.addEventListener('pointercancel', finish);
+  stage.addEventListener('pointerleave', finish);
+})();
 
 $('#find-input').addEventListener('input', (e) => {
   if (searchTimer) clearTimeout(searchTimer);
@@ -105,6 +161,13 @@ $('#find-input').addEventListener('input', (e) => {
 
 // typography popup
 $('#font-family').addEventListener('change', (e) => saveSettings({ fontFamily: e.target.value }));
+$('#font-weight').addEventListener('change', (e) => saveSettings({ fontWeight: Number(e.target.value) }));
+$('#force-font').addEventListener('change', (e) => {
+  saveSettings({ forceFont: e.target.checked });
+  const c = $('#reader-content');
+  if (c) c.classList.toggle('force-font', e.target.checked);
+  toast(e.target.checked ? 'Шрифт и цвет берутся из настроек' : 'Книга рисует себя сама', 'ok');
+});
 const liveRange = (sel, key, cast) => {
   $(sel).addEventListener('input', (e) => {
     const v = cast(e.target.value);

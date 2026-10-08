@@ -6,6 +6,7 @@ const BLOCK_SEL = 'p, li, h1, h2, h3, h4, .fb-verse, .fb-author-line';
 
 const Translator = {
   info: null,
+  wanted: null,
   settings: {},
   busy: false,
   bookBusy: false,
@@ -165,6 +166,7 @@ const Translator = {
         to: this.settings.to, force: !!force
       });
       this.applyToNodes(nodes, res.items);
+      this.wanted = Reader.book.id + ':' + Reader.chapter;
       $('#tr-status').textContent = res.cached ? 'Готово (из кэша)' : 'Готово: ' + res.items.length + ' фрагментов';
       toast('Глава переведена', 'ok');
       if (this.auto) this.prefetchNext();
@@ -196,15 +198,29 @@ const Translator = {
     Reader.updateProgress();
   },
 
-  // Re-apply a cached translation when a chapter is (re)rendered.
+  // Re-apply a cached translation when a chapter is (re)rendered. A mismatched
+  // count no longer means giving up: whatever lines exist are shown.
   async restore() {
     if (!Reader.book) return;
     const nodes = this.blocks();
     if (!nodes.length) return;
     try {
-      const items = await L.translatePeek(Reader.book.id, Reader.chapter, this.settings.to, nodes.length);
-      if (items) this.applyToNodes(nodes, items);
+      const items = await L.translatePeek(Reader.book.id, Reader.chapter, this.settings.to, 0);
+      if (items && items.length) {
+        this.applyToNodes(nodes, items);
+        this.wanted = Reader.book.id + ':' + Reader.chapter;
+      }
     } catch (e) { /* nothing cached */ }
+  },
+
+  // Cheap guard: if a translation was on screen and something wiped it (a
+  // re-render, a page turn, a highlight re-apply), put it back.
+  ensure() {
+    if (!Reader.book || !this.wanted) return;
+    if (this.wanted !== Reader.book.id + ':' + Reader.chapter) return;
+    const host = Reader.content();
+    if (host.querySelector('.tr-line') || host.querySelector('[data-tr-source]')) return;
+    this.restore();
   },
 
   clear(wipeCache) {
@@ -216,6 +232,7 @@ const Translator = {
       node.classList.remove('tr-replaced');
     }
     for (const node of Array.from(host.querySelectorAll('.tr-origin'))) node.classList.remove('tr-origin');
+    if (wipeCache) this.wanted = null;
     if (wipeCache && Reader.book) {
       L.translateClear(Reader.book.id, this.settings.to).then(() => {
         $('#tr-status').textContent = 'Перевод сброшен';

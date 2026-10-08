@@ -119,7 +119,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .reader-scroll { position: absolute; inset: 0 0 56px; overflow-y: auto; background: var(--paper); }
 .reader-body {
   padding: 18px 18px 60px; color: var(--paper-text);
-  font-family: Georgia, 'Noto Serif', serif;
+  font-family: var(--rf, Georgia), 'Noto Serif', serif;
   font-size: var(--rs, 19px); line-height: var(--rl, 1.65);
   user-select: text; -webkit-user-select: text;
 }
@@ -262,3 +262,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .modal textarea { width: 100%; min-height: 110px; padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: 14px/1.5 system-ui; user-select: text; }
 .modal .quote { font: italic 13px/1.5 Georgia, serif; border-left: 3px solid var(--acc); padding-left: 11px; margin-bottom: 12px; color: var(--text2); max-height: 30vh; overflow-y: auto; }
 .modal .acts { display: flex; gap: 9px; justify-content: flex-end; margin-top: 14px; }
+
+.reader-body, .reader-body * { font-family: inherit !important; color: inherit !important; background-color: transparent !important; }
+.reader-body mark.hl.amber { background-color: color-mix(in srgb, var(--hl-amber) 42%, transparent) !important; }
+.reader-body mark.hl.rose { background-color: color-mix(in srgb, var(--hl-rose) 40%, transparent) !important; }
+.reader-body mark.hl.mint { background-color: color-mix(in srgb, var(--hl-mint) 38%, transparent) !important; }
+.reader-body mark.hl.sky { background-color: color-mix(in srgb, var(--hl-sky) 38%, transparent) !important; }
+.reader-body mark.hl.violet { background-color: color-mix(in srgb, var(--hl-violet) 38%, transparent) !important; }

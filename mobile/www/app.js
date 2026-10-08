@@ -137,7 +137,7 @@ const State = {
   settings: {
     token: '', owner: '', repo: 'lumen-sync', auto: true,
     notify: true, remind: false, remindTime: '20:30',
-    theme: 'night', fontSize: 19, lineHeight: 1.65, justify: true,
+    theme: 'night', fontSize: 19, lineHeight: 1.65, justify: true, fontFamily: 'Georgia',
     lastSync: 0
   },
   screen: 'library',
@@ -181,6 +181,7 @@ async function saveSettings() {
 function applyTheme() {
   const s = State.settings;
   document.documentElement.dataset.theme = s.theme || 'night';
+  document.documentElement.style.setProperty('--rf', s.fontFamily || 'Georgia');
   document.documentElement.style.setProperty('--rs', (s.fontSize || 19) + 'px');
   document.documentElement.style.setProperty('--rl', String(s.lineHeight || 1.65));
   const body = $('#reader-body');
@@ -1085,6 +1086,7 @@ $$('#selpop .pop-act').forEach((b) => b.addEventListener('click', async () => {
   }
 }));
 
+$('#t-font').addEventListener('change', (e) => { State.settings.fontFamily = e.target.value; applyTheme(); saveSettings(); });
 $('#t-size').addEventListener('input', (e) => { State.settings.fontSize = Number(e.target.value); applyTheme(); saveSettings(); });
 $('#t-line').addEventListener('input', (e) => { State.settings.lineHeight = Number(e.target.value); applyTheme(); saveSettings(); });
 $('#t-justify').addEventListener('change', (e) => { State.settings.justify = e.target.checked; applyTheme(); saveSettings(); });
@@ -1139,6 +1141,7 @@ if (Plugins.App) {
 
 (async function start() {
   await loadState();
+  $('#t-font').value = State.settings.fontFamily || 'Georgia';
   $('#t-size').value = State.settings.fontSize;
   $('#t-line').value = State.settings.lineHeight;
   $('#t-justify').checked = !!State.settings.justify;

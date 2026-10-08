@@ -153,10 +153,11 @@ function applySettings() {
   document.documentElement.dataset.theme = s.theme || 'night';
   document.documentElement.dataset.accent = s.accent || 'amber';
   const r = document.documentElement.style;
-  r.setProperty('--rf', s.fontFamily || 'Literata');
+  r.setProperty('--rf', s.fontFamily || 'Cambria');
   r.setProperty('--rs', (s.fontSize || 20) + 'px');
   r.setProperty('--rl', String(s.lineHeight || 1.7));
   r.setProperty('--rw', (s.pageWidth || 760) + 'px');
+  r.setProperty('--rfw', String(s.fontWeight || 400));
 
   const name = s.profileName || 'Lumen';
   $('#profile-name').textContent = name;
@@ -185,13 +186,20 @@ function applySettings() {
   bind('#line-height', s.lineHeight || 1.7, '#line-height-val');
   bind('#page-width', s.pageWidth || 760, '#page-width-val');
   const ff = $('#font-family');
-  if (ff) ff.value = s.fontFamily || 'Literata';
+  if (ff) ff.value = s.fontFamily || 'Cambria';
+  const fw = $('#font-weight');
+  if (fw) fw.value = String(s.fontWeight || 400);
+  const forceFont = $('#force-font');
+  if (forceFont) forceFont.checked = s.forceFont !== false;
   const pm = $('#paged-mode');
   if (pm) pm.checked = !!s.paged;
   const jm = $('#justify-mode');
   if (jm) jm.checked = !!s.justify;
   const content = $('#reader-content');
-  if (content) content.classList.toggle('justify', !!s.justify);
+  if (content) {
+    content.classList.toggle('justify', !!s.justify);
+    content.classList.toggle('force-font', s.forceFont !== false);
+  }
 }
 
 async function saveSettings(patch) {
