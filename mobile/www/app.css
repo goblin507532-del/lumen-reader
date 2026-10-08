@@ -26,6 +26,9 @@ html[data-accent="amber"] { --acc: #f0a93c; --acc2: #ffcd6b; --acc-ink: #2a1c05;
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* A flex/grid rule must not beat the hidden attribute. */
+[hidden] { display: none !important; }
+
 html, body { height: 100%; margin: 0; overflow: hidden; }
 
 body {

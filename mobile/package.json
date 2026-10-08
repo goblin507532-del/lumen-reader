@@ -1,6 +1,6 @@
 {
   "name": "lumen-reader-mobile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Lumen Reader for Android — library, reader, second brain, sync",
   "scripts": {

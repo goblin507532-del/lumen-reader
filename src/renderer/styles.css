@@ -910,3 +910,10 @@ input[type=range]::-webkit-slider-thumb {
 .cat-group h3 .sp { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--acc); animation: spin .7s linear infinite; }
 .cat-group.empty h3 { opacity: .55; }
 .cat-item .acts .muted { font-size: 11px; }
+
+.remote-tag {
+  position: absolute; left: 8px; bottom: 10px;
+  font-size: 9.5px; letter-spacing: .04em; padding: 3px 7px; border-radius: 6px;
+  background: rgba(12, 10, 8, .72); color: var(--acc2); backdrop-filter: blur(4px);
+}
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text2); cursor: pointer; margin-top: 6px; }

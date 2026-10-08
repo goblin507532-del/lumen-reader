@@ -332,6 +332,22 @@ function register(deps) {
     return { login: user.login, repo: (syncSettings().repo || 'lumen-sync') };
   });
 
+  deps.runSync = async function runSync(note) {
+    const cfg = syncCfg();
+    const res = await sync.syncState(cfg, localState(), note || 'lumen desktop');
+    applyState(res.state);
+    const settings = syncSettings();
+    settings.lastSync = Date.now();
+    store.data.settings.sync = settings;
+    store.save();
+    return res;
+  };
+
+  deps.syncReady = function syncReady() {
+    const s = syncSettings();
+    return !!(s.auto && s.token && s.owner);
+  };
+
   handle('sync:run', async (opts) => {
     const cfg = syncCfg();
     const win = getWin();

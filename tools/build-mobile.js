@@ -39,10 +39,14 @@ function download(url, target) {
   fs.mkdirSync(libOut, { recursive: true });
   fs.mkdirSync(vendorOut, { recursive: true });
 
+  // Browsers put every classic script in one global scope, so two libraries
+  // declaring the same const would collide. Each copy gets its own closure.
   for (const name of SHARED) {
     const from = path.join(root, 'src', 'lib', name);
-    fs.copyFileSync(from, path.join(libOut, name));
-    console.log('copied lib/' + name);
+    const code = fs.readFileSync(from, 'utf8');
+    const wrapped = '(function () {\n' + code + '\n})();\n';
+    fs.writeFileSync(path.join(libOut, name), wrapped, 'utf8');
+    console.log('wrapped lib/' + name);
   }
 
   const zipTarget = path.join(vendorOut, 'jszip.min.js');

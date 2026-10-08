@@ -16,6 +16,9 @@ const { uid, stripTags } = require('./lib/util');
 let store = null;
 let win = null;
 
+// Filled in by ipc-extra so the quit handler can flush a sync.
+const extras = { handle: null, store: null, getWin: () => win };
+
 // Big books, big caches: a thousand-page FB2 with images needs room, and the
 // renderer must keep working while the window sits in the background.
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
@@ -72,6 +75,8 @@ function createWindow() {
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   store = new Store(dataDir());
+  extras.handle = handle;
+  extras.store = store;
 
   protocol.handle('lumen', async (req) => {
     try {
@@ -90,7 +95,7 @@ app.whenReady().then(() => {
   });
 
   createWindow();
-  require('./ipc-extra').register({ handle, store, getWin: () => win });
+  require('./ipc-extra').register(extras);
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
   if (process.env.LUMEN_SELFTEST) selfTest();
 });
@@ -192,6 +197,18 @@ function selfTest() {
     app.quit();
   });
 }
+
+// Leaving the app flushes the library to the sync repo, so the phone opens on
+// the page this device stopped at.
+let flushing = false;
+app.on('before-quit', (event) => {
+  if (flushing || !extras.syncReady || !extras.syncReady()) return;
+  event.preventDefault();
+  flushing = true;
+  extras.runSync('lumen desktop: выход')
+    .catch(() => {})
+    .then(() => app.quit());
+});
 
 app.on('window-all-closed', () => {
   try { if (store) store.save(); } catch (e) { /* ignore */ }

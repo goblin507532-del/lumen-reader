@@ -379,6 +379,9 @@ setupDrop();
     Settings.render();
     Brain.render();
     Translator.init();
+    Sync.load().then(() => {
+      if (Sync.info && Sync.info.auto && Sync.info.hasToken) Sync.run(true);
+    });
     const panes = $('#be-panes');
     if (panes) panes.className = 'be-panes';
   } catch (e) {
